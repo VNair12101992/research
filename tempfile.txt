@@ -1,0 +1,419 @@
+package com.learn.research.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+
+import java.io.Serializable;
+import java.util.Objects;
+
+@Entity
+@Table(name = "DealPrincipal")
+@IdClass(DealPrincipal.DealPrincipalId.class)
+public class DealPrincipal {
+
+ @Id
+ @Column(name = "dealId", length = 20)
+ private String dealId;
+
+ @Id
+ @Column(name = "name", length = 100)
+ private String name;
+
+ @Column(name = "is_primary")
+ private Boolean isPrimary;
+
+ @Column(name = "role", length = 20)
+ private String role;
+
+ @Column(name = "country", length = 3)
+ private String country;
+
+ @Column(name = "industry_sector", length = 50)
+ private String industrySector;
+
+ @ManyToOne
+ @JoinColumn(name = "dealId", referencedColumnName = "dealId",
+ insertable = false, updatable = false)
+ @JsonIgnore
+ private Deal deal;
+
+ // Constructors
+ public DealPrincipal() {
+ }
+
+ public DealPrincipal(String dealId, String name, Boolean isPrimary, String role, String country, String industrySector) {
+ this.dealId = dealId;
+ this.name = name;
+ this.isPrimary = isPrimary;
+ this.role = role;
+ this.country = country;
+ this.industrySector = industrySector;
+ }
+
+ // Getters and Setters
+ public String getDealId() {
+ return dealId;
+ }
+
+ public void setDealId(String dealId) {
+ this.dealId = dealId;
+ }
+
+ public String getName() {
+ return name;
+ }
+
+ public void setName(String name) {
+ this.name = name;
+ }
+
+ public Boolean getIsPrimary() {
+ return isPrimary;
+ }
+
+ public void setIsPrimary(Boolean isPrimary) {
+ this.isPrimary = isPrimary;
+ }
+
+ public String getRole() {
+ return role;
+ }
+
+ public void setRole(String role) {
+ this.role = role;
+ }
+
+ public String getCountry() {
+ return country;
+ }
+
+ public void setCountry(String country) {
+ this.country = country;
+ }
+
+ public String getIndustrySector() {
+ return industrySector;
+ }
+
+ public void setIndustrySector(String industrySector) {
+ this.industrySector = industrySector;
+ }
+
+ public Deal getDeal() {
+ return deal;
+ }
+
+ public void setDeal(Deal deal) {
+ this.deal = deal;
+ }
+
+ @Override
+ public String toString() {
+ return "DealPrincipal{" +
+ "dealId='" + dealId + '\'' +
+ ", name='" + name + '\'' +
+ ", isPrimary=" + isPrimary +
+ ", role='" + role + '\'' +
+ ", country='" + country + '\'' +
+ ", industrySector='" + industrySector + '\'' +
+ '}';
+ }
+
+ // Composite Primary Key Class
+ public static class DealPrincipalId implements Serializable {
+
+ private String dealId;
+ private String name;
+
+ // Default constructor
+ public DealPrincipalId() {
+ }
+
+ public DealPrincipalId(String dealId, String name) {
+ this.dealId = dealId;
+ this.name = name;
+ }
+
+ // Getters and Setters
+ public String getDealId() {
+ return dealId;
+ }
+
+ public void setDealId(String dealId) {
+ this.dealId = dealId;
+ }
+
+ public String getName() {
+ return name;
+ }
+
+ public void setName(String name) {
+ this.name = name;
+ }
+
+ // equals and hashCode
+ @Override
+ public boolean equals(Object o) {
+ if (this == o) return true;
+ if (o == null || getClass() != o.getClass()) return false;
+ DealPrincipalId that = (DealPrincipalId) o;
+ return Objects.equals(dealId, that.dealId) &&
+ Objects.equals(name, that.name);
+ }
+
+ @Override
+ public int hashCode() {
+ return Objects.hash(dealId, name);
+ }
+ }
+}
+
+
+
+-- H2 Database Schema and Data
+-- Drop tables if they exist (for clean re-runs)
+DROP TABLE IF EXISTS DealTeamMember;
+DROP TABLE IF EXISTS Deal;
+DROP TABLE IF EXISTS Employee;
+
+-- Create Employee Table
+CREATE TABLE Employee (
+ empId VARCHAR(20) PRIMARY KEY,
+ designation VARCHAR(20),
+ firstName VARCHAR(20),
+ lastName VARCHAR(20),
+ location VARCHAR(20),
+ country VARCHAR(3),
+ region VARCHAR(10)
+);
+
+-- Create Deal Table
+CREATE TABLE Deal (
+ dealId VARCHAR(20) PRIMARY KEY,
+ submittedBy VARCHAR(20),
+ dealType VARCHAR(10),
+ submittedDate TIMESTAMP,
+ region VARCHAR(10),
+ size VARCHAR(20),
+ FOREIGN KEY (submittedBy) REFERENCES Employee(empId)
+);
+
+-- Create DealTeamMember Table
+CREATE TABLE DealTeamMember (
+ dealId VARCHAR(20),
+ hrId VARCHAR(20),
+ role VARCHAR(20) CHECK (role IN ('LEAD_BANKER', 'KEY_CONTACT')),
+ PRIMARY KEY (dealId, hrId),
+ FOREIGN KEY (dealId) REFERENCES Deal(dealId),
+ FOREIGN KEY (hrId) REFERENCES Employee(empId)
+);
+
+-- Drop table if exists
+DROP TABLE IF EXISTS DealCompletenessIssues;
+
+-- Create DealCompletenessIssues Table
+CREATE TABLE DealCompletenessIssues (
+ dealId VARCHAR(20),
+ issueType VARCHAR(30) CHECK (issueType IN ('DEAL_MEMBER_DESIGNATION','DEAL_BANKER_REGION','DEAL_DUPLICATE')),
+ issues CLOB,
+ PRIMARY KEY (dealId, issueType)
+);
+
+-- Drop existing table
+DROP TABLE IF EXISTS DealPrincipal;
+
+-- Create DealPrincipal Table
+CREATE TABLE DealPrincipal (
+ dealId VARCHAR(20),
+ name VARCHAR(100),
+ is_primary BOOLEAN,
+ role VARCHAR(20) CHECK (role IN ('ACQ','SELLER','INVESTOR')),
+ country VARCHAR(3), -- ISO code
+ industry_sector VARCHAR(50),
+ PRIMARY KEY (dealId, name),
+ FOREIGN KEY (dealId) REFERENCES Deal(dealId)
+);
+
+
+
+
+
+
+
+-- Insert dummy data into Employee Table
+INSERT INTO Employee (empId, designation, firstName, lastName, location, country, region) VALUES
+('EMP001', 'Vice President', 'John', 'Smith', 'New York', 'USA', 'Americas'),
+('EMP002', 'Director', 'Sarah', 'Johnson', 'London', 'GBR', 'EMEA'),
+('EMP003', 'Manging Director', 'Michael', 'Brown', 'Hong Kong', 'HKG', 'APAC'),
+('EMP004', 'Associate', 'Emily', 'Davis', 'Mumbai', 'IND', 'APAC'),
+('EMP005', 'Vice President', 'David', 'Wilson', 'Singapore', 'SGP', 'APAC'),
+('EMP006', 'Director', 'Lisa', 'Anderson', 'Frankfurt', 'DEU', 'EMEA'),
+('EMP007', 'Analyst', 'Robert', 'Taylor', 'New York', 'USA', 'Americas'),
+('EMP008', 'Associate', 'Jennifer', 'Martinez', 'San Francisco', 'USA', 'Americas'),
+('EMP009', 'Manging Director', 'William', 'Garcia', 'Tokyo', 'JPN', 'APAC'),
+('EMP010', 'Vice President', 'Amanda', 'Rodriguez', 'Paris', 'FRA', 'EMEA');
+
+-- Insert dummy data into Deal Table
+INSERT INTO Deal (dealId, submittedBy, dealType, submittedDate, region, size) VALUES
+('DEAL001', 'EMP001', 'M&A', '2024-01-15 10:30:00','APAC','10000000'),
+('DEAL002', 'EMP001', 'M&A', '2024-02-20 14:45:00','APAC','10000000'),
+('DEAL003', 'EMP003', 'M&A', '2024-03-10 09:15:00','APAC','10000001092'),
+('DEAL004', 'EMP005', 'BOND', '2024-03-25 11:20:00','APAC','100000004234'),
+('DEAL005', 'EMP006', 'EQUITY', '2024-04-05 16:00:00','EMEA','32435345345'),
+('DEAL006', 'EMP001', 'M&A', '2024-04-18 13:30:00','Americas','789879080'),
+('DEAL007', 'EMP009', 'IPO', '2024-05-02 10:00:00','EMEA','233243454'),
+('DEAL008', 'EMP010', 'BOND', '2024-05-15 15:45:00','APAC','214345436456');
+
+-- Insert dummy data into DealTeamMember Table
+INSERT INTO DealTeamMember (dealId, hrId, role) VALUES
+-- DEAL001 Team
+('DEAL001', 'EMP001', 'LEAD_BANKER'),
+('DEAL001', 'EMP007', 'KEY_CONTACT'),
+('DEAL001', 'EMP008', 'KEY_CONTACT'),
+
+-- DEAL002 Team
+('DEAL002', 'EMP001', 'LEAD_BANKER'),
+('DEAL002', 'EMP007', 'KEY_CONTACT'),
+
+-- DEAL003 Team
+('DEAL003', 'EMP003', 'LEAD_BANKER'),
+('DEAL003', 'EMP004', 'KEY_CONTACT'),
+('DEAL003', 'EMP005', 'KEY_CONTACT'),
+
+-- DEAL004 Team
+('DEAL004', 'EMP005', 'LEAD_BANKER'),
+('DEAL004', 'EMP004', 'KEY_CONTACT'),
+
+-- DEAL005 Team
+('DEAL005', 'EMP006', 'LEAD_BANKER'),
+('DEAL005', 'EMP010', 'KEY_CONTACT'),
+('DEAL005', 'EMP002', 'KEY_CONTACT'),
+
+-- DEAL006 Team
+('DEAL006', 'EMP001', 'LEAD_BANKER'),
+('DEAL006', 'EMP007', 'KEY_CONTACT'),
+
+-- DEAL007 Team
+('DEAL007', 'EMP009', 'LEAD_BANKER'),
+('DEAL007', 'EMP003', 'KEY_CONTACT'),
+('DEAL007', 'EMP005', 'KEY_CONTACT'),
+
+-- DEAL008 Team
+('DEAL008', 'EMP010', 'LEAD_BANKER'),
+('DEAL008', 'EMP006', 'KEY_CONTACT');
+
+
+-- Issue: Lead Banker Designation mismatch
+INSERT INTO DealCompletenessIssues (dealId, issueType, issues) VALUES (
+ 'DEAL001',
+ 'DEAL_MEMBER_DESIGNATION',
+ '{
+ "dealId":"DEAL001",
+ "leadBankerDesignation":"Vice President",
+ "leadBankerHrId":"EMP001"
+ }'
+);
+
+-- Issue: Lead Banker Region mismatch
+INSERT INTO DealCompletenessIssues (dealId, issueType, issues) VALUES (
+ 'DEAL001',
+ 'DEAL_BANKER_REGION',
+ '{
+ "dealId":"DEAL001",
+ "leadBankerRegion":"Americas",
+ "dealRegion":"APAC"
+ }'
+);
+
+-- Issue: Duplicate Deal
+INSERT INTO DealCompletenessIssues (dealId, issueType, issues) VALUES (
+ 'DEAL001',
+ 'DEAL_DUPLICATE',
+ '{
+ "dealId":"DEAL001",
+ "duplicateDealIds":["DEAL002"],
+ "duplicateDealSize":"10000000",
+ "overlappingDealTeamMembers":["EMP001","EMP007"]
+ }'
+);
+
+INSERT INTO DealCompletenessIssues (dealId, issueType, issues) VALUES (
+ 'DEAL005',
+ 'DEAL_MEMBER_DESIGNATION',
+ '{
+ "dealId":"DEAL005",
+ "leadBankerDesignation":"Director",
+ "leadBankerHrId":"EMP006"
+ }'
+);
+
+INSERT INTO DealCompletenessIssues (dealId, issueType, issues) VALUES (
+ 'DEAL004',
+ 'DEAL_MEMBER_DESIGNATION',
+ '{
+ "dealId":"DEAL004",
+ "leadBankerDesignation":"Vice President",
+ "leadBankerHrId":"EMP005"
+ }'
+);
+
+INSERT INTO DealCompletenessIssues (dealId, issueType, issues) VALUES (
+ 'DEAL010',
+ 'DEAL_MEMBER_DESIGNATION',
+ '{
+ "dealId":"DEAL010",
+ "leadBankerDesignation":"Vice President",
+ "leadBankerHrId":"EMP010"
+ }'
+);
+
+INSERT INTO DealCompletenessIssues (dealId, issueType, issues) VALUES (
+ 'DEAL002',
+ 'DEAL_MEMBER_DESIGNATION',
+ '{
+ "dealId":"DEAL002",
+ "leadBankerDesignation":"Vice President",
+ "leadBankerHrId":"EMP001"
+ }'
+);
+
+-- Insert principals for each deal
+INSERT INTO DealPrincipal (dealId, name, is_primary, role, country, industry_sector) VALUES
+-- DEAL001 - Microsoft vs Activision Blizzard acquisition (regulatory conflicts)
+('DEAL001', 'Microsoft Corporation', TRUE, 'ACQ', 'USA', 'Technology'),
+('DEAL001', 'Sony Group Corporation', FALSE, 'INVESTOR', 'JPN', 'Technology'),
+('DEAL001', 'Blackstone Group', FALSE, 'INVESTOR', 'GBR', 'Private Equity'),
+
+-- DEAL002 - Apple vs Samsung patent war context
+('DEAL002', 'Apple Inc', TRUE, 'ACQ', 'USA', 'Technology'),
+('DEAL002', 'Samsung Electronics', FALSE, 'SELLER', 'KOR', 'Technology'),
+('DEAL002', 'Bain Capital', FALSE, 'INVESTOR', 'DEU', 'Venture Capital'),
+
+-- DEAL003 - Boeing vs Airbus aviation competition
+('DEAL003', 'Boeing Company', TRUE, 'ACQ', 'USA', 'Industrial'),
+('DEAL003', 'Airbus SE', FALSE, 'SELLER', 'FRA', 'Industrial'),
+('DEAL003', 'Bridgewater Associates', FALSE, 'INVESTOR', 'USA', 'Hedge Fund'),
+
+-- DEAL004 - NVIDIA vs AMD GPU market competition
+('DEAL004', 'NVIDIA Corporation', TRUE, 'ACQ', 'USA', 'Technology'),
+('DEAL004', 'Advanced Micro Devices', FALSE, 'SELLER', 'USA', 'Technology'),
+
+-- DEAL005 - Uber vs Lyft ride-sharing competition
+('DEAL005', 'Uber Technologies', TRUE, 'ACQ', 'USA', 'Technology'),
+('DEAL005', 'Lyft Inc', FALSE, 'SELLER', 'USA', 'Technology'),
+('DEAL005', 'KKR & Co', FALSE, 'INVESTOR', 'USA', 'Private Equity'),
+
+-- DEAL006 - Coca-Cola vs Pepsi beverage wars
+('DEAL006', 'The Coca-Cola Company', TRUE, 'ACQ', 'USA', 'Consumer Goods'),
+('DEAL006', 'PepsiCo Inc', FALSE, 'SELLER', 'USA', 'Consumer Goods'),
+('DEAL006', 'Ontario Teachers Pension Plan', FALSE, 'INVESTOR', 'CAN', 'Institutional Investor'),
+
+-- DEAL007 - Netflix vs Disney+ streaming competition
+('DEAL007', 'Netflix Inc', TRUE, 'ACQ', 'USA', 'Entertainment'),
+('DEAL007', 'The Walt Disney Company', FALSE, 'SELLER', 'USA', 'Entertainment'),
+('DEAL007', 'Vanguard Group', FALSE, 'INVESTOR', 'USA', 'Mutual Fund'),
+
+-- DEAL008 - Amazon vs Walmart retail competition
+('DEAL008', 'Amazon.com Inc', TRUE, 'ACQ', 'USA', 'Retail'),
+('DEAL008', 'Walmart Inc', FALSE, 'SELLER', 'USA', 'Retail'),
+('DEAL008', 'Allianz SE', FALSE, 'INVESTOR', 'DEU', 'Insurance');
